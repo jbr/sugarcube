@@ -1,0 +1,10 @@
+body {
+    font-family: "helvetica neue";
+}
+
+svg .axis path,
+svg .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
