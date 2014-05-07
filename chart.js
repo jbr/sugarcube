@@ -41,14 +41,19 @@ window.C = window.Chart = (function() {
 
   C.proto = {}
 
-  C.proto.render = function(element) {
+  C.proto.render = function(element, margin) {
     var domElement = document.body.querySelector(element)
+    ,   svgHeight = Number(domElement.getAttribute('height'))
+    ,   svgWidth = Number(domElement.getAttribute('width'))
+    if (typeof margin === 'undefined') margin = Math.min(svgHeight, svgWidth) / 10.0
+    this.margin = margin
+    this.width = svgWidth - (margin * 2)
+    this.height = svgHeight - (margin * 2)
 
-    var margin = this.margin = 40
-    this.width = Number(domElement.getAttribute('width')) - (margin * 2)
-    this.height = Number(domElement.getAttribute('height')) - (margin * 2)
+    var d3Element = d3.select(element)
+        .append('g')
+        .attr('transform', 'translate('+margin+','+margin+')')
 
-    var d3Element = d3.select(element).append('g').attr('transform', 'translate('+margin+','+margin+')')
     this.renders.forEach(_(function(renderer) {
       renderer.call(this, d3Element)
     }).bind(this))
@@ -147,9 +152,23 @@ window.C = window.Chart = (function() {
 
 
   C.scales = {}
+
+  C.scales.pick = function(aesthetic, options) {
+    var scaleType = 'identity'
+    ,   columnType = C.util.type(this.data.columns[aesthetic])
+    
+    if (columnType === 'number') scaleType = 'continuous'
+    else if (columnType === 'string') scaleType = 'categorical'
+
+    C.scales[scaleType].call(this, aesthetic, options)
+  }
+  
   C.scales.categorical = function(aesthetic, options) {
     this.limits[aesthetic] = _(this.data.columns[aesthetic]).unique()
     this.scales[aesthetic] = d3.scale.ordinal().domain(this.limits[aesthetic])
+
+    if (options && options.range)
+      this.scales[aesthetic].rangeBands(options.range, options.rangePad || 0.1)
   }
 
   C.scales.continuous = function(aesthetic, options) {
@@ -159,9 +178,13 @@ window.C = window.Chart = (function() {
       this.limits[aesthetic] = C.util.pad(options.pad, this.limits[aesthetic])
 
     this.scales[aesthetic] = d3.scale.linear().domain(this.limits[aesthetic])
+
+    if (options && options.range)
+      this.scales[aesthetic].range(options.range)
   }
 
   C.scales.identity = function(aesthetic, value) {
+    if (_(value).isObject()) value = value.defaultValue
     this.scales[aesthetic] = function() { return value }
   }
 
@@ -203,22 +226,14 @@ window.C = window.Chart = (function() {
   C.geoms = {}
 
   C.geoms.bar = function() {
-    var chart = this
-    C.scales.categorical.call(this, 'x')
-    C.scales.continuous.call(this, 'y', { pad: 0.25 })
-    if (this.aes.fill && this.data.columns.fill) {
-      C.scales.continuous.call(this, 'fill')
-      this.scales.fill.range(['red', 'blue'])
-    } else {
-      C.scales.identity.call(this, 'fill', 'black')
-    }
-
     C.axis.x.call(this)
     C.axis.y.call(this)
-
     this.renders.unshift(function(element) {
-      this.scales.x.rangeBands([0, this.width], 0.1)
-      this.scales.y.range([this.height, 0])
+      var chart = this
+      C.scales.pick.call(this, 'x', { range: [0, this.width] })
+      C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+      C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
+
       this.axes.x.scale(this.scales.x)
       this.axes.y.scale(this.scales.y)
 
@@ -243,33 +258,18 @@ window.C = window.Chart = (function() {
 
   C.geoms.point = function() {
     var chart = this
-
-    C.scales.continuous.call(this, 'x', { pad: 0.25 })
-    C.scales.continuous.call(this, 'y', { pad: 0.25 })
-
-    if (this.aes.fill && this.data.columns.fill) {
-      C.scales.continuous.call(this, 'fill')
-      this.scales.fill.range(['red', 'blue'])
-    } else {
-      C.scales.identity.call(this, 'fill', 'blue')
-    }
-
-    if (this.aes.size && this.data.columns.size) {
-      C.scales.continuous.call(this, 'size')
-      this.scales.size.range([5, 10])
-    } else {
-      C.scales.identity.call(this, 'size', 5)
-    }
-
     C.axis.x.call(this)
     C.axis.y.call(this)
 
     this.renders.unshift(function(element) {
-      this.scales.x.range([0, this.width])
-      this.scales.y.range([this.height, 0])
+      C.scales.pick.call(this, 'x', { pad: 0.25, range: [0, this.width] })
+      C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+      C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
+      C.scales.pick.call(this, 'size', { defaultValue: 5, range: [5, 10] })
+
+
       this.axes.x.scale(this.scales.x)
       this.axes.y.scale(this.scales.y)
-
 
       element.selectAll('.point')
         .data(this.data.rows)
@@ -281,7 +281,10 @@ window.C = window.Chart = (function() {
         .style('fill', function(d) { return chart.scales.fill(d.fill) })
         .attr('class', 'point')
         .attr('transform', function(d) {
-          return "translate(" + chart.scales.x(d.x) + ", "+ chart.scales.y(d.y) + ")"
+          var x = chart.scales.x.rangeBand ?
+              chart.scales.x(d.x) + chart.scales.x.rangeBand() / 2 :
+              chart.scales.x(d.x)
+          return "translate(" + x + ", "+ chart.scales.y(d.y) + ")"
         })
     })
   }
