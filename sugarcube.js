@@ -1,13 +1,13 @@
-window.C = window.Chart = (function() {
-  var C = function() {
-    var obj = Object.create(C.proto)
-    C.chart.apply(obj, arguments)
+window.SC = window.Sugarcube = (function() {
+  var SC = function() {
+    var obj = Object.create(SC.proto)
+    SC.chart.apply(obj, arguments)
     return obj
   }
 
-  C.chart = function(selector, options) {
+  SC.chart = function(selector, options) {
     this.renders = []
-    this.options = C.util.deepExtend({}, options)
+    this.options = SC.util.deepExtend({}, options)
     this.aes = {}
     this.data = {}
     this.limits = {}
@@ -42,13 +42,13 @@ window.C = window.Chart = (function() {
     return this
   }
 
-  C.proto = {}
+  SC.proto = {}
 
-  C.proto.q = function(options) {
-    if (_(options).isArray() || C.util.isColumns(options))
+  SC.proto.q = function(options) {
+    if (_(options).isArray() || SC.util.isSColumns(options))
       options = { data: options }
     
-    C.util.deepExtend(this.options, options)
+    SC.util.deepExtend(this.options, options)
 
     _(this.aes).extend(_(this.options).pick('x', 'y', 'color', 'fill', 'size', 'alpha'),
                        this.options.aes)
@@ -60,16 +60,16 @@ window.C = window.Chart = (function() {
     this.stat = this.options.stat
     this.geom = this.options.geom
 
-    C.util.processData.call(this)
+    SC.util.processData.call(this)
 
     if (this.stat)
-      C.stats[this.stat].call(this)
+      SC.stats[this.stat].call(this)
 
-    C.geoms[this.geom].call(this)
+    SC.geoms[this.geom].call(this)
     return this
   }
 
-  C.proto.render = function() {
+  SC.proto.render = function() {
     var chart = this
 
     chart.renders.forEach(function(renderer) {
@@ -98,22 +98,22 @@ window.C = window.Chart = (function() {
 
 
 
-  C.util = {}
+  SC.util = {}
 
-  C.util.isColumns = function(d) {
+  SC.util.isSColumns = function(d) {
     return _(d).isObject() &&
       _(d).all(function(value) { return _(value).isArray() }) &&
       _(d).chain().values().pluck('length').unique().value().length === 1
   }
 
 
-  C.util.processData = function() {
+  SC.util.processData = function() {
     var chart = this
     _(this.data).defaults({ columns: {}, rows: [] })
 
 
     
-    if (_(this.data.raw).isArray() && C.util.type(this.data.raw) === 'object') {
+    if (_(this.data.raw).isArray() && SC.util.type(this.data.raw) === 'object') {
       this.data.rows = chart.data.raw.map(function(inRow) {
         var out = {}
         _(chart.aes).each(function(value, name) {
@@ -131,7 +131,7 @@ window.C = window.Chart = (function() {
       this.data.columns.x = this.data.raw
       this.aes.x = 'x'
       _(this).defaults({ geom: 'bar', stat: 'bin' })
-      this.data.rows = C.util.columnsToRows(this.data.columns)
+      this.data.rows = SC.util.columnsToRows(this.data.columns)
     } else if (_(this.data.raw).isObject()) {
       this.data.columns = _(this.aes).reduce(function(columns, value, key) {
         if (_(value).isString()) columns[key] = this.data.raw[value]
@@ -139,11 +139,11 @@ window.C = window.Chart = (function() {
         return columns
       }, {})
 
-      this.data.rows = C.util.columnsToRows(this.data.columns)
+      this.data.rows = SC.util.columnsToRows(this.data.columns)
     }
   }
 
-  C.util.deepSet = function(object, key, value) {
+  SC.util.deepSet = function(object, key, value) {
     var keyParts = key.split ? key.split(".") : key
 
     if (keyParts.length === 1) {
@@ -152,31 +152,31 @@ window.C = window.Chart = (function() {
       if (typeof object[keyParts[0]] === 'undefined')
         object[keyParts[0]] = {}
 
-      C.util.deepSet(object[keyParts[0]], keyParts.slice(1), value)
+      SC.util.deepSet(object[keyParts[0]], keyParts.slice(1), value)
     }
 
     return object
   }
 
-  C.util.deepGet = function(object, key) {
+  SC.util.deepGet = function(object, key) {
     var keyParts = key.split ? key.split(".") : key
     if (keyParts.length === 1) return object[keyParts[0]]
-    else if (object[keyParts[0]]) return C.util.deepGet(object[keyParts[0]], keyParts.slice(1))
+    else if (object[keyParts[0]]) return SC.util.deepGet(object[keyParts[0]], keyParts.slice(1))
   }
 
-  C.util.deepExtend = function(root) {
+  SC.util.deepExtend = function(root) {
     root = root || {}
     _(Array.prototype.slice.call(arguments, 1))
       .each(function(extension) {
-        _(extension).each(function(value, key) { C.util.deepSet(root, key, value) })
+        _(extension).each(function(value, key) { SC.util.deepSet(root, key, value) })
       })
     return root
   }
 
 
-  C.util.type = function(data) {
+  SC.util.type = function(data) {
     if (_(data).isArray()) {
-      var types = _(data).chain().map(C.util.type).unique().value()
+      var types = _(data).chain().map(SC.util.type).unique().value()
       if (types.length > 1) throw new Error("elements in an array should be the same type, but were mixed: " + types.join(", "))
       return types[0]
     } else if (_(data).isString()) {
@@ -188,7 +188,7 @@ window.C = window.Chart = (function() {
     }
   }
 
-  C.util.pad = function(margin, limit) {
+  SC.util.pad = function(margin, limit) {
     var min = limit[0], max = limit[1]
     ,   range = Math.abs(max - min)
     ,   pad = margin * range
@@ -197,7 +197,7 @@ window.C = window.Chart = (function() {
     else return [ min + pad, max - pad ]
   }
 
-  C.util.columnsToRows = function(columns) {
+  SC.util.columnsToRows = function(columns) {
     var columnNames = Object.keys(columns)
     ,   lengths = _(columnNames.map(function(n) {return columns[n].length})).unique()
 
@@ -216,10 +216,10 @@ window.C = window.Chart = (function() {
 
 
 
-  C.stats = {}
+  SC.stats = {}
 
 
-  C.stats.jitter = function() {
+  SC.stats.jitter = function() {
     var chart = this
     _(['x', 'y']).each(function(column) {
       var extent = d3.extent(chart.data.columns[column])
@@ -231,16 +231,16 @@ window.C = window.Chart = (function() {
         return p + random()
       })
 
-      chart.data.rows = C.util.columnsToRows(chart.data.columns)
+      chart.data.rows = SC.util.columnsToRows(chart.data.columns)
     })
   }
                       
 
   
-  C.stats.bin = function() {
+  SC.stats.bin = function() {
     var domain
 
-    if (C.util.type(this.data.columns.x) === 'number') {
+    if (SC.util.type(this.data.columns.x) === 'number') {
       if (this.options.bins && this.options.binWidth)
         throw new Error("Please don't supply both bins and binWidth.  It confuses me.")
 
@@ -277,9 +277,9 @@ window.C = window.Chart = (function() {
 
     this.data.columns.y = this.data.columns.counts
 
-    this.data.rows = C.util.columnsToRows(this.data.columns)
-    C.util.deepSet(this, 'limits.y.min', 0)
-    C.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })
+    this.data.rows = SC.util.columnsToRows(this.data.columns)
+    SC.util.deepSet(this, 'limits.y.min', 0)
+    SC.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })
   }
 
 
@@ -290,26 +290,26 @@ window.C = window.Chart = (function() {
 
 
 
-  C.scales = {}
+  SC.scales = {}
 
-  C.scales.pick = function(aesthetic, options) {
+  SC.scales.pick = function(aesthetic, options) {
     if (this.scales[aesthetic]) return
 
     if (_(this.aes[aesthetic]).isNumber()) {
-      C.scales.identity.call(this, aesthetic, this.aes[aesthetic])
+      SC.scales.identity.call(this, aesthetic, this.aes[aesthetic])
       return
     }
 
     var scaleType = 'identity'
-    ,   columnType = C.util.type(this.data.columns[aesthetic])
+    ,   columnType = SC.util.type(this.data.columns[aesthetic])
     
     if (columnType === 'number') scaleType = 'continuous'
     else if (columnType === 'string') scaleType = 'categorical'
 
-    C.scales[scaleType].call(this, aesthetic, options)
+    SC.scales[scaleType].call(this, aesthetic, options)
   }
   
-  C.scales.categorical = function(aesthetic, options) {
+  SC.scales.categorical = function(aesthetic, options) {
     this.limits[aesthetic] = _(this.data.columns[aesthetic]).unique()
     this.scales[aesthetic] = d3.scale.ordinal().domain(this.limits[aesthetic])
 
@@ -321,11 +321,11 @@ window.C = window.Chart = (function() {
     }
   }
 
-  C.scales.continuous = function(aesthetic, options) {
+  SC.scales.continuous = function(aesthetic, options) {
     var extents = d3.extent(this.data.columns[aesthetic])
 
     if (options && options.pad)
-      extents = C.util.pad(options.pad, extents)
+      extents = SC.util.pad(options.pad, extents)
 
     this.limits[aesthetic] = _(this.limits[aesthetic] || {}).defaults({
       min: extents[0],
@@ -341,7 +341,7 @@ window.C = window.Chart = (function() {
       this.scales[aesthetic].range(options.range)
   }
 
-  C.scales.identity = function(aesthetic, value) {
+  SC.scales.identity = function(aesthetic, value) {
     if (_(value).isObject()) value = value.defaultValue
     this.scales[aesthetic] = function() { return value }
   }
@@ -352,8 +352,8 @@ window.C = window.Chart = (function() {
 
 
 
-  C.axis = {}
-  C.axis.x = function() {
+  SC.axis = {}
+  SC.axis.x = function() {
     if (!this.scales.x) throw new Error("cannot make a x axis without a x scale")
     this.axes.x = d3.svg.axis().orient('bottom').scale(this.scales.x)
 
@@ -365,7 +365,7 @@ window.C = window.Chart = (function() {
     })
   }
 
-  C.axis.y = function() {
+  SC.axis.y = function() {
     if (!this.scales.y) throw new Error("cannot make a y axis without a y scale")
     this.axes.y = d3.svg.axis().orient('left').scale(this.scales.y)
 
@@ -383,25 +383,25 @@ window.C = window.Chart = (function() {
 
 
 
-  C.geoms = {}
+  SC.geoms = {}
 
-  C.geoms.jitter = function() {
-    C.stats.jitter.call(this)
-    C.geoms.point.call(this)
+  SC.geoms.jitter = function() {
+    SC.stats.jitter.call(this)
+    SC.geoms.point.call(this)
   }
 
-  C.geoms.histogram = function() {
-    C.stats.bin.call(this)
-    C.geoms.bar.call(this)
+  SC.geoms.histogram = function() {
+    SC.stats.bin.call(this)
+    SC.geoms.bar.call(this)
   }
 
-  C.geoms.bar = function() {
-    C.scales.pick.call(this, 'x', { range: [0, this.width] })
-    C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
-    C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
+  SC.geoms.bar = function() {
+    SC.scales.pick.call(this, 'x', { range: [0, this.width] })
+    SC.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+    SC.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
 
-    C.axis.x.call(this)
-    C.axis.y.call(this)
+    SC.axis.x.call(this)
+    SC.axis.y.call(this)
 
     this.renders.push(function barGeom() {
       var chart = this
@@ -422,17 +422,17 @@ window.C = window.Chart = (function() {
 
 
 
-  C.geoms.point = function() {
+  SC.geoms.point = function() {
     var chart = this
 
-    C.scales.pick.call(this, 'x', { pad: 0.25, range: [0, this.width] })
-    C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
-    C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue', 'green'] })
-    C.scales.pick.call(this, 'size', { defaultValue: 5, range: [5, 10] })
-    C.scales.pick.call(this, 'alpha', { defaultValue: 1, range: [0, 1] })
+    SC.scales.pick.call(this, 'x', { pad: 0.25, range: [0, this.width] })
+    SC.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+    SC.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue', 'green'] })
+    SC.scales.pick.call(this, 'size', { defaultValue: 5, range: [5, 10] })
+    SC.scales.pick.call(this, 'alpha', { defaultValue: 1, range: [0, 1] })
 
-    C.axis.x.call(this)
-    C.axis.y.call(this)
+    SC.axis.x.call(this)
+    SC.axis.y.call(this)
 
     this.renders.push(function() {
       this.element.selectAll('.point')
@@ -454,5 +454,5 @@ window.C = window.Chart = (function() {
     })
   }
 
-  return C
+  return SC
 })()
