@@ -1,6 +1,8 @@
 # Sugarcube
 ### Oh it's work all day for some sugar in your d3
 
+![Sugarcube](http://graphics8.nytimes.com/images/2012/11/18/magazine/18WMT-t_CA0/18WMT-t_CA0-articleLarge.jpg)
+
 D3 is great.  But I find myself copying and pasting boilerplate when I
 use it. That means it doesn't provide the right level of abstraction
 for the specific sort of tasks I've used it for. D3 is incredibly
