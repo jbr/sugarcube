@@ -134,7 +134,7 @@ window.SC = window.Sugarcube = (function() {
       this.data.rows = SC.util.columnsToRows(this.data.columns)
     } else if (_(this.data.raw).isObject()) {
       this.data.columns = _(this.aes).reduce(function(columns, value, key) {
-        if (_(value).isString()) columns[key] = this.data.raw[value]
+        if (_(value).isString()) columns[key] = chart.data.raw[value]
         else columns[key] = value
         return columns
       }, {})
