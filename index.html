@@ -22,6 +22,11 @@
       <pre><code class="language-javascript"></code></pre>
     </div>
 
+    <div id="categorical">
+      <svg width="400" height="300"></svg>
+      <pre><code class="language-javascript"></code></pre>
+    </div>
+
     <!-- ACTUAL DEPENDENCIES -->
     <script src="bower_components/d3/d3.js" charset="utf8"></script>
     <script src="bower_components/underscore/underscore.js"></script>
@@ -32,7 +37,7 @@
     <script src="bower_components/prism/prism.js"></script>
 
     <script>
-      ;['histogram', 'points'].forEach(function(exampleName) {
+      'histogram points categorical'.split(' ').forEach(function(exampleName) {
         $.get('examples/'+exampleName+'.js').done(function(example) {
           Prism.highlightElement($('#'+exampleName+' code').text(example).get(0))
         })
