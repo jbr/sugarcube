@@ -5,60 +5,78 @@ window.C = window.Chart = (function() {
     return obj
   }
 
-  C.chart = function(options) {
+  C.chart = function(selector, options) {
     this.renders = []
-    this.options = options || {}
-    this.aes = _(this.options).chain().pick('x', 'y', 'color', 'fill', 'size').extend(options.aes).value()
-    this.data = { raw: this.options.data }
+    this.options = C.util.deepExtend({}, options)
+    this.aes = {}
+    this.data = {}
     this.limits = {}
     this.scales = {}
     this.axes = {}
+    this.selector = selector
 
-    if (_(this.data.raw).isArray() && C.util.type(this.data.raw) === 'object') {
-      this.data.rows = _(this.data.raw).map(_(function(inRow) {
-        var out = {}
-        _(this.aes).each(_(function(value, name) {
-          out[name] = inRow[value]
-        }).bind(this))
-          return out
-      }).bind(this))
+    var domElement = this.domElement = document.body.querySelector(selector)
+    ,   svgHeight = this.svgHeight = Number(domElement.getAttribute('height'))
+    ,   svgWidth = this.svgWidth = Number(domElement.getAttribute('width'))
+    ,   margin = this.options.margin || {}
 
-      this.data.columns = {}
+    if (_(margin).isNumber()) {
+      margin = { top: margin, left: margin, bottom: margin, right: margin }
+    }
 
-      _(this.aes).each(_(function(value, name) {
-        this.data.columns[name] = _(this.data.raw).pluck(value)
-      }).bind(this))
-        }
+    _(margin).defaults({
+      top: 10,
+      left: 50,
+      bottom: 50,
+      right: 0
+    })
 
-    this.stat = this.options.stat
-    if (this.options.stat)
-      C.stats[this.stat].call(this)
+    this.margin = margin
+    this.width = svgWidth - margin.left - margin.right
+    this.height = svgHeight - margin.top - margin.bottom
 
-    this.geom = this.options.geom
-    C.geoms[this.geom].call(this)
+    this.element = d3.select(selector)
+      .append('g')
+      .attr('transform', 'translate('+margin.left+','+margin.top+')')
+
+    return this
   }
-
 
   C.proto = {}
 
-  C.proto.render = function(element, margin) {
-    var domElement = document.body.querySelector(element)
-    ,   svgHeight = Number(domElement.getAttribute('height'))
-    ,   svgWidth = Number(domElement.getAttribute('width'))
-    if (typeof margin === 'undefined') margin = Math.min(svgHeight, svgWidth) / 10.0
-    this.margin = margin
-    this.width = svgWidth - (margin * 2)
-    this.height = svgHeight - (margin * 2)
+  C.proto.q = function(options) {
+    if (_(options).isArray() || C.util.isColumns(options))
+      options = { data: options }
+    
+    C.util.deepExtend(this.options, options)
 
-    var d3Element = d3.select(element)
-        .append('g')
-        .attr('transform', 'translate('+margin+','+margin+')')
+    _(this.aes).extend(_(this.options).pick('x', 'y', 'color', 'fill', 'size', 'alpha'),
+                       this.options.aes)
 
-    this.renders.forEach(_(function(renderer) {
-      renderer.call(this, d3Element)
-    }).bind(this))
+    _(this.data).extend({ raw: this.options.data })
 
+    _(this.limits).extend(this.options.limits)
+
+    this.stat = this.options.stat
+    this.geom = this.options.geom
+
+    C.util.processData.call(this)
+
+    if (this.stat)
+      C.stats[this.stat].call(this)
+
+    C.geoms[this.geom].call(this)
     return this
+  }
+
+  C.proto.render = function() {
+    var chart = this
+
+    chart.renders.forEach(function(renderer) {
+      renderer.call(chart, chart.element)
+    })
+
+    return chart
   }
 
 
@@ -81,6 +99,80 @@ window.C = window.Chart = (function() {
 
 
   C.util = {}
+
+  C.util.isColumns = function(d) {
+    return _(d).isObject() &&
+      _(d).all(function(value) { return _(value).isArray() }) &&
+      _(d).chain().values().pluck('length').unique().value().length === 1
+  }
+
+
+  C.util.processData = function() {
+    var chart = this
+    _(this.data).defaults({ columns: {}, rows: [] })
+
+
+    
+    if (_(this.data.raw).isArray() && C.util.type(this.data.raw) === 'object') {
+      this.data.rows = chart.data.raw.map(function(inRow) {
+        var out = {}
+        _(chart.aes).each(function(value, name) {
+          if (_(value).isString())
+            out[name] = inRow[value]
+          else out[name] = value
+        })
+          return out
+      })
+
+      _(this.aes).each(function(value, name) {
+        chart.data.columns[name] = _(chart.data.rows).pluck(name)
+      })
+    } else if (_(this.data.raw).isArray()) {
+      this.data.columns.x = this.data.raw
+      this.aes.x = 'x'
+      _(this).defaults({ geom: 'bar', stat: 'bin' })
+      this.data.rows = C.util.columnsToRows(this.data.columns)
+    } else if (_(this.data.raw).isObject()) {
+      this.data.columns = _(this.aes).reduce(function(columns, value, key) {
+        if (_(value).isString()) columns[key] = this.data.raw[value]
+        else columns[key] = value
+        return columns
+      }, {})
+
+      this.data.rows = C.util.columnsToRows(this.data.columns)
+    }
+  }
+
+  C.util.deepSet = function(object, key, value) {
+    var keyParts = key.split ? key.split(".") : key
+
+    if (keyParts.length === 1) {
+      object[keyParts[0]] = value
+    } else {
+      if (typeof object[keyParts[0]] === 'undefined')
+        object[keyParts[0]] = {}
+
+      C.util.deepSet(object[keyParts[0]], keyParts.slice(1), value)
+    }
+
+    return object
+  }
+
+  C.util.deepGet = function(object, key) {
+    var keyParts = key.split ? key.split(".") : key
+    if (keyParts.length === 1) return object[keyParts[0]]
+    else if (object[keyParts[0]]) return C.util.deepGet(object[keyParts[0]], keyParts.slice(1))
+  }
+
+  C.util.deepExtend = function(root) {
+    root = root || {}
+    _(Array.prototype.slice.call(arguments, 1))
+      .each(function(extension) {
+        _(extension).each(function(value, key) { C.util.deepSet(root, key, value) })
+      })
+    return root
+  }
+
 
   C.util.type = function(data) {
     if (_(data).isArray()) {
@@ -124,23 +216,70 @@ window.C = window.Chart = (function() {
 
 
 
-
-
   C.stats = {}
+
+
+  C.stats.jitter = function() {
+    var chart = this
+    _(['x', 'y']).each(function(column) {
+      var extent = d3.extent(chart.data.columns[column])
+      ,   range = Math.abs(extent[1] - extent[0])
+      ,   jitter = range * 0.05
+      ,   random = d3.random.normal(0, jitter)
+
+      chart.data.columns[column] = chart.data.columns[column].map(function(p) {
+        return p + random()
+      })
+
+      chart.data.rows = C.util.columnsToRows(chart.data.columns)
+    })
+  }
+                      
+
+  
   C.stats.bin = function() {
-    if (C.util.type(this.data.columns.x) === 'string') {
-      var counts = _(this.data.columns.x).reduce(function(m, n) {
-        m[n] = (m[n] || 0) + 1
-        return m
-      }, {})
+    var domain
 
-      this.data.columns.x = Object.keys(counts)
-      this.data.columns.counts = this.data.columns.x.map(function(n) { return counts[n] })
-      if (! this.data.columns.y)
-        this.data.columns.y = this.data.columns.counts
+    if (C.util.type(this.data.columns.x) === 'number') {
+      if (this.options.bins && this.options.binWidth)
+        throw new Error("Please don't supply both bins and binWidth.  It confuses me.")
 
-      this.data.rows = C.util.columnsToRows(this.data.columns)
+      var bins = this.options.bins || 6
+      ,   min = d3.min(this.data.columns.x)
+      ,   max = d3.max(this.data.columns.x)
+      ,   binWidth = this.options.binWidth || (Math.abs(max-min) / bins)
+      ,   precision = 1 - Math.floor(Math.log(binWidth) / Math.log(10))
+
+      binWidth = d3.round(binWidth, precision)
+
+      domain = _.range(min,max,binWidth).map(function(n) {
+        return d3.round(n, precision)
+      })
+
+      this.data.columns.x = this.data.columns.x.map(function(d) {
+        return _(domain).detect(function(n) { return n <= d && d <= n+binWidth})
+      })
     }
+
+    domain = domain || _(this.data.columns.x).unique()
+
+    var counts = _(this.data.columns.x).reduce(function(m, n) {
+      m[n] = (m[n] || 0) + 1
+      return m
+    }, {})
+
+    this.data.columns.x = domain
+
+    this.data.columns.counts = domain.map(function(n) { return counts[n] || 0})
+
+    // if (_(this.data.columns.x).all(function(d) { return d.match(/^[0-9.]+$/) }))
+    //     this.data.columns.x = this.data.columns.x.map(Number)
+
+    this.data.columns.y = this.data.columns.counts
+
+    this.data.rows = C.util.columnsToRows(this.data.columns)
+    C.util.deepSet(this, 'limits.y.min', 0)
+    C.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })
   }
 
 
@@ -154,6 +293,13 @@ window.C = window.Chart = (function() {
   C.scales = {}
 
   C.scales.pick = function(aesthetic, options) {
+    if (this.scales[aesthetic]) return
+
+    if (_(this.aes[aesthetic]).isNumber()) {
+      C.scales.identity.call(this, aesthetic, this.aes[aesthetic])
+      return
+    }
+
     var scaleType = 'identity'
     ,   columnType = C.util.type(this.data.columns[aesthetic])
     
@@ -167,17 +313,29 @@ window.C = window.Chart = (function() {
     this.limits[aesthetic] = _(this.data.columns[aesthetic]).unique()
     this.scales[aesthetic] = d3.scale.ordinal().domain(this.limits[aesthetic])
 
-    if (options && options.range)
-      this.scales[aesthetic].rangeBands(options.range, options.rangePad || 0.1)
+    if ((aesthetic === 'x' || aesthetic === 'y')) {
+      _(options).defaults({ rangePad: 0.1 })
+      this.scales[aesthetic].rangeBands(options.range, options.rangePad)
+    } else {
+      this.scales[aesthetic].range(options.range)
+    }
   }
 
   C.scales.continuous = function(aesthetic, options) {
-    this.limits[aesthetic] = this.limits[aesthetic] || d3.extent(this.data.columns[aesthetic])
+    var extents = d3.extent(this.data.columns[aesthetic])
 
     if (options && options.pad)
-      this.limits[aesthetic] = C.util.pad(options.pad, this.limits[aesthetic])
+      extents = C.util.pad(options.pad, extents)
 
-    this.scales[aesthetic] = d3.scale.linear().domain(this.limits[aesthetic])
+    this.limits[aesthetic] = _(this.limits[aesthetic] || {}).defaults({
+      min: extents[0],
+      max: extents[1]
+    })
+    
+    this.scales[aesthetic] = d3.scale.linear().domain([
+      this.limits[aesthetic].min,
+      this.limits[aesthetic].max
+    ])
 
     if (options && options.range)
       this.scales[aesthetic].range(options.range)
@@ -196,10 +354,11 @@ window.C = window.Chart = (function() {
 
   C.axis = {}
   C.axis.x = function() {
-    this.axes.x = d3.svg.axis().orient('bottom')
+    if (!this.scales.x) throw new Error("cannot make a x axis without a x scale")
+    this.axes.x = d3.svg.axis().orient('bottom').scale(this.scales.x)
 
-    this.renders.push(function(element) {
-      element.append('g')
+    this.renders.push(function xAxis() {
+      this.element.append('g')
         .attr('class', 'x axis')
         .attr('transform', 'translate(0,'+this.height+')')
         .call(this.axes.x)
@@ -207,10 +366,11 @@ window.C = window.Chart = (function() {
   }
 
   C.axis.y = function() {
-    this.axes.y = d3.svg.axis().orient('left')
+    if (!this.scales.y) throw new Error("cannot make a y axis without a y scale")
+    this.axes.y = d3.svg.axis().orient('left').scale(this.scales.y)
 
-    this.renders.push(function(element) {
-      element.append('g')
+    this.renders.push(function yAxis() {
+      this.element.append('g')
         .attr('class', 'y axis')
         .attr('transform', 'translate(0,0)')
         .call(this.axes.y)
@@ -225,19 +385,28 @@ window.C = window.Chart = (function() {
 
   C.geoms = {}
 
+  C.geoms.jitter = function() {
+    C.stats.jitter.call(this)
+    C.geoms.point.call(this)
+  }
+
+  C.geoms.histogram = function() {
+    C.stats.bin.call(this)
+    C.geoms.bar.call(this)
+  }
+
   C.geoms.bar = function() {
+    C.scales.pick.call(this, 'x', { range: [0, this.width] })
+    C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+    C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
+
     C.axis.x.call(this)
     C.axis.y.call(this)
-    this.renders.unshift(function(element) {
+
+    this.renders.push(function barGeom() {
       var chart = this
-      C.scales.pick.call(this, 'x', { range: [0, this.width] })
-      C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
-      C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
 
-      this.axes.x.scale(this.scales.x)
-      this.axes.y.scale(this.scales.y)
-
-      element.selectAll('.bar')
+      this.element.selectAll('.bar')
         .data(this.data.rows)
         .enter()
         .append('rect')
@@ -253,25 +422,20 @@ window.C = window.Chart = (function() {
 
 
 
-
-
-
   C.geoms.point = function() {
     var chart = this
+
+    C.scales.pick.call(this, 'x', { pad: 0.25, range: [0, this.width] })
+    C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
+    C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue', 'green'] })
+    C.scales.pick.call(this, 'size', { defaultValue: 5, range: [5, 10] })
+    C.scales.pick.call(this, 'alpha', { defaultValue: 1, range: [0, 1] })
+
     C.axis.x.call(this)
     C.axis.y.call(this)
 
-    this.renders.unshift(function(element) {
-      C.scales.pick.call(this, 'x', { pad: 0.25, range: [0, this.width] })
-      C.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
-      C.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
-      C.scales.pick.call(this, 'size', { defaultValue: 5, range: [5, 10] })
-
-
-      this.axes.x.scale(this.scales.x)
-      this.axes.y.scale(this.scales.y)
-
-      element.selectAll('.point')
+    this.renders.push(function() {
+      this.element.selectAll('.point')
         .data(this.data.rows)
         .enter()
         .append('circle')
@@ -279,6 +443,7 @@ window.C = window.Chart = (function() {
         .attr('cy', function(d) { return - chart.scales.size(d.size) / 2})
         .attr('r', function(d) { return chart.scales.size(d.size) })
         .style('fill', function(d) { return chart.scales.fill(d.fill) })
+        .style('opacity', function(d) { return chart.scales.alpha(d.alpha) })
         .attr('class', 'point')
         .attr('transform', function(d) {
           var x = chart.scales.x.rangeBand ?
