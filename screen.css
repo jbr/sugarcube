@@ -2,6 +2,16 @@ body {
     font-family: "helvetica neue";
 }
 
+body > div {
+    width: 500px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+pre code {
+    font-size: 12px;
+}
+
 svg .axis path,
 svg .axis line {
     fill: none;

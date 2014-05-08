@@ -1,4 +1,4 @@
-SC('svg#points').q({
+SC('#points svg').q({
   x: 'm',
   y: 'n',
   fill: 'l',
@@ -34,11 +34,3 @@ SC('svg#points').q({
     {l: 'delta', m: 35, n: 10}
   ]
 }).render()
-
-SC('svg#histogram', {'margin.left': 60 })
-  .q(_(10000).times(d3.random.normal(50, 10)))
-  .render()
-
-
-
-

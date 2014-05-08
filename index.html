@@ -1,16 +1,43 @@
 <!DOCTYPE html> 
 <html> 
   <head> 
-    <link rel="stylesheet" href="screen.css"/>
     <title>Sugarcube for d3</title>
+    <link rel="stylesheet" href="screen.css"/>
+    <link rel="stylesheet" href="bower_components/prism/themes/prism.css"/>
   </head>
   <body>
-    <svg width="300" height="200" id="histogram"></svg>
-    <svg width="300" height="300" id="points"></svg>
+    <h1>Sugarcube</h1>
+    <p>
+      Here are some live examples of sugarcube. The code listed below
+      each chart is the exact code that generates it.
+    </p>
+
+    <div id="histogram">
+      <svg width="400" height="300"></svg>
+      <pre><code class="language-javascript"></code></pre>
+    </div>
+
+    <div id="points">
+      <svg width="400" height="300"></svg>
+      <pre><code class="language-javascript"></code></pre>
+    </div>
+
+    <!-- ACTUAL DEPENDENCIES -->
     <script src="bower_components/d3/d3.js" charset="utf8"></script>
     <script src="bower_components/underscore/underscore.js"></script>
     <script src="sugarcube.js"></script>
-    <script src="example.js"></script>
+
+    <!-- DEPENDENCIES FOR THIS EXAMPLE ONLY -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/prism/prism.js"></script>
+
+    <script>
+      ;['histogram', 'points'].forEach(function(exampleName) {
+        $.get('examples/'+exampleName+'.js').done(function(example) {
+          Prism.highlightElement($('#'+exampleName+' code').text(example).get(0))
+        })
+      })
+    </script>
   </body>
 </html>
 

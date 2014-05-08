@@ -1,0 +1,32 @@
+{
+  "name": "sugarcube",
+  "main": "sugarcube.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jbr/sugarcube",
+  "authors": [
+    "Jacob Rothstein <hi@jbr.me>"
+  ],
+  "description": "Sugar for d3 inspired by ggplot2",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "d3"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.4.6",
+    "underscore": "~1.6.0"
+  },
+  "devDependencies": {
+    "jquery": "~2.1.1",
+    "prism": "gh-pages"
+  }
+}
