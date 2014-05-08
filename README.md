@@ -1,5 +1,5 @@
-### Sugarcube
-## Oh it's work all day for some sugar in your d3
+# Sugarcube
+### Oh it's work all day for some sugar in your d3
 
 D3 is great.  But I find myself copying and pasting boilerplate when I
 use it. That means it doesn't provide the right level of abstraction
@@ -38,7 +38,7 @@ data: [
 ```
 
 
-# Future
+## Future
 
 I'd like to be able to use this library like I use ggplot2 -- usually
 I start with a qplot and then add `layer`s and `scale`s and `geom`s as
@@ -47,7 +47,7 @@ as easy to get started and override / customize. Here are some
 sketches of what _should_ be possible:
 
 ```javascript
-C('svg', {data: data})
+SC('svg', {data: data})
   .statJitter()
   .geomPoint({ x: 'time', y: 'value' })
   .geomSmooth({ method: 'lm' })
