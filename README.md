@@ -63,11 +63,7 @@ adding in situations that the library would assume replacement, but I
 don't need ggplot2's `layer` very often.
 
 I'd like sugarcube to be easily extensible, so libraries could provide
-new and interesting geoms. Instead of just copying and pasting code
-from http://bl.ocks.org, I'd like to be able to install a hexbin
-library, for example, and be able to `geom: 'hexbin'` like you can in
-ggplot2. Similarly, some of the `ggmap` features could be implemented
-as plugins for sugarcube.
+new and interesting geoms, stats, scales, facets, etc.
 
 Sound interesting? Please help! I'm sharing this at an early stage to
 solicit feedback. File bugs and issues, send pull requests, let me
