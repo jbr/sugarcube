@@ -12,6 +12,10 @@ pre code {
     font-size: 12px;
 }
 
+svg {
+    font-size: 10px;
+}
+
 svg .axis path,
 svg .axis line {
     fill: none;

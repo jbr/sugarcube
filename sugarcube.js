@@ -244,7 +244,7 @@ window.SC = window.Sugarcube = (function() {
       if (this.options.bins && this.options.binWidth)
         throw new Error("Please don't supply both bins and binWidth.  It confuses me.")
 
-      var bins = this.options.bins || 6
+      var bins = this.options.bins || 10
       ,   min = d3.min(this.data.columns.x)
       ,   max = d3.max(this.data.columns.x)
       ,   binWidth = this.options.binWidth || (Math.abs(max-min) / bins)
