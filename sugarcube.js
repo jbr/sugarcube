@@ -278,7 +278,6 @@ window.SC = window.Sugarcube = (function() {
     this.data.columns.y = this.data.columns.counts
 
     this.data.rows = SC.util.columnsToRows(this.data.columns)
-    SC.util.deepSet(this, 'limits.y.min', 0)
     SC.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })
   }
 
@@ -396,6 +395,7 @@ window.SC = window.Sugarcube = (function() {
   }
 
   SC.geoms.bar = function() {
+    SC.util.deepSet(this, 'limits.y.min', 0)
     SC.scales.pick.call(this, 'x', { range: [0, this.width] })
     SC.scales.pick.call(this, 'y', { pad: 0.25, range: [this.height, 0]})
     SC.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })

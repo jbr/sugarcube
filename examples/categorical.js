@@ -4,7 +4,6 @@ SC('#categorical svg')
     x: 'word',
     fill: 'levity',
     geom: 'bar',
-    'limits.y.min': 0,
     data: {
       word: ['hello', 'world', 'example', 'chart'],
       count: [5, 10, 2, 3],
