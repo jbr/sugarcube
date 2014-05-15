@@ -12,25 +12,7 @@
       each chart is the exact code that generates it.
     </p>
 
-    <div id="histogram">
-      <svg width="400" height="300"></svg>
-      <pre><code class="language-javascript"></code></pre>
-    </div>
-
-    <div id="points">
-      <svg width="400" height="300"></svg>
-      <pre><code class="language-javascript"></code></pre>
-    </div>
-
-    <div id="categorical">
-      <svg width="400" height="300"></svg>
-      <pre><code class="language-javascript"></code></pre>
-    </div>
-
-    <div id="alphabet">
-      <svg width="400" height="300"></svg>
-      <pre><code class="language-javascript"></code></pre>
-    </div>
+    <div id="examples"></div>
 
     <!-- ACTUAL DEPENDENCIES -->
     <script src="bower_components/d3/d3.js" charset="utf8"></script>
@@ -42,8 +24,14 @@
     <script src="bower_components/prism/prism.js"></script>
 
     <script>
-      'histogram points categorical alphabet'.split(' ').forEach(function(exampleName) {
-        $.get('examples/'+exampleName+'.js').done(function(example) {
+      'histogram points categorical alphabet line path'.split(' ').forEach(function(exampleName) {
+      $('<div><h3>' + exampleName + '</h3><svg width="375" height="300"></svg><pre><code class="language-javascript"></code></pre></div>')
+        .appendTo('#examples').attr('id', exampleName)
+
+      $.get('examples/'+exampleName+'.js')
+        .fail(function(z,o,err) {throw err})
+        .done(function(example) {
+          console.log(arguments)
           Prism.highlightElement($('#'+exampleName+' code').text(example).get(0))
         })
       })

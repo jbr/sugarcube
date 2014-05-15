@@ -108,3 +108,14 @@ SC.util.columnsToRows = function(columns) {
     }, {})
   })
 }
+
+SC.util.rowsToColumns = function(rows) {
+  var columnNames = _(rows).reduce(function(cols, row) {
+    return _(cols).union(Object.keys(row))
+  }, [])
+
+  return _(columnNames).reduce(function(columns, colName) {
+    columns[colName] = _(rows).pluck(colName)
+    return columns
+  }, {})
+}
