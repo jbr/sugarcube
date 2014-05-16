@@ -449,12 +449,13 @@ SC.util.cast.time = function(d) {
   var momentD = moment(d)
   return (momentD.isValid() ?
           momentD :
-          moment(d, ['HH:mm', 'hh:mma', 'hh:mm a'])).toDate()
+          moment(d, SC.util.cast.time.formats)).toDate()
 }
 
+SC.util.cast.time.formats = ['HH:mm', 'hh:mma', 'hh:mm a', 'h:mma', 'h:mm a']
 
 SC.util.isTime = function(data) {
-  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a'], true).isValid()
+  return _(data).isString() && moment(data, SC.util.cast.time.formats, true).isValid()
 }
 
 SC.util.isDate = function(data) {
