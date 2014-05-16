@@ -71,12 +71,39 @@ SC.util.deepExtend = function(root) {
       return root
 }
 
+SC.util.cast = function(aesthetic, type) {
+  console.log(this.data.columns, aesthetic)
+  this.data.columns[aesthetic] = this.data.columns[aesthetic].map(SC.util.cast[type])
+  this.data.rows = SC.util.columnsToRows(this.data.columns)
+}
+
+SC.util.cast.time = function(d) {
+  var momentD = moment(d)
+  return (momentD.isValid() ?
+          momentD :
+          moment(d, ['HH:mm', 'hh:mma', 'hh:mm a'])).toDate()
+}
+
+
+SC.util.isTime = function(data) {
+  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a']).isValid()
+}
+
+SC.util.isDate = function(data) {
+  return _(data).isDate() || (_(data).isString() && moment(data).isValid())
+}
 
 SC.util.type = function(data) {
   if (_(data).isArray()) {
     var types = _(data).chain().map(SC.util.type).unique().value()
     if (types.length > 1) throw new Error("elements in an array should be the same type, but were mixed: " + types.join(", "))
     return types[0]
+  } else if (SC.util.isDate(data)) {
+    console.log(data, 'is date')
+    return 'time'
+  } else if (SC.util.isTime(data)) {
+    console.log(data, 'is time')
+    return 'time'
   } else if (_(data).isString()) {
     return 'string'
   } else if (_(data).isNumber()) {

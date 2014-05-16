@@ -81,7 +81,6 @@ var SC = window.SC = window.Sugarcube = (function() {
     return chart
   }
 
-
   SC.scales.pick = function(aesthetic, options) {
     if (this.scales[aesthetic]) return
 
@@ -92,9 +91,10 @@ var SC = window.SC = window.Sugarcube = (function() {
 
     var scaleType = 'identity'
     ,   columnType = SC.util.type(this.data.columns[aesthetic])
-    
+
     if (columnType === 'number') scaleType = 'continuous'
     else if (columnType === 'string') scaleType = 'categorical'
+    else if (columnType === 'time') scaleType = 'time'
 
     SC.scales[scaleType].call(this, aesthetic, options)
   }
@@ -292,7 +292,6 @@ SC.scales.categorical = function(aesthetic, options) {
     this.scales[aesthetic].range(options.range)
   }
 }
-
 SC.scales.continuous = function(aesthetic, options) {
   var extents = d3.extent(this.data.columns[aesthetic])
 
@@ -317,6 +316,34 @@ SC.scales.identity = function(aesthetic, value) {
   if (_(value).isObject()) value = value.defaultValue
   this.scales[aesthetic] = function() { return value }
 }
+SC.scales.time = function(aesthetic, options) {
+  SC.util.cast.call(this, aesthetic, 'time')
+
+  var extents = d3.extent(this.data.columns[aesthetic])
+
+  if (options && options.pad) {
+    extents = SC.util.pad(options.pad, extents.map(Number))
+      .map(function(d) {return new Date(d)})
+  }
+
+  this.limits[aesthetic] = _(this.limits[aesthetic] || {}).defaults({
+    min: extents[0],
+    max: extents[1]
+  })
+  
+  this.scales[aesthetic] = d3.time.scale().domain([
+    this.limits[aesthetic].min,
+    this.limits[aesthetic].max
+  ])
+
+  if (options && options.range) {
+    var ticks = Math.max(2, Math.floor(Math.abs(options.range[1] - options.range[0]) / 75))
+    this.scales[aesthetic]
+      .range(options.range)
+      .ticks(ticks)
+  }
+}
+
 SC.util.isSColumns = function(d) {
   return _(d).isObject() &&
     _(d).all(function(value) { return _(value).isArray() }) &&
@@ -390,12 +417,39 @@ SC.util.deepExtend = function(root) {
       return root
 }
 
+SC.util.cast = function(aesthetic, type) {
+  console.log(this.data.columns, aesthetic)
+  this.data.columns[aesthetic] = this.data.columns[aesthetic].map(SC.util.cast[type])
+  this.data.rows = SC.util.columnsToRows(this.data.columns)
+}
+
+SC.util.cast.time = function(d) {
+  var momentD = moment(d)
+  return (momentD.isValid() ?
+          momentD :
+          moment(d, ['HH:mm', 'hh:mma', 'hh:mm a'])).toDate()
+}
+
+
+SC.util.isTime = function(data) {
+  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a']).isValid()
+}
+
+SC.util.isDate = function(data) {
+  return _(data).isDate() || (_(data).isString() && moment(data).isValid())
+}
 
 SC.util.type = function(data) {
   if (_(data).isArray()) {
     var types = _(data).chain().map(SC.util.type).unique().value()
     if (types.length > 1) throw new Error("elements in an array should be the same type, but were mixed: " + types.join(", "))
     return types[0]
+  } else if (SC.util.isDate(data)) {
+    console.log(data, 'is date')
+    return 'time'
+  } else if (SC.util.isTime(data)) {
+    console.log(data, 'is time')
+    return 'time'
   } else if (_(data).isString()) {
     return 'string'
   } else if (_(data).isNumber()) {

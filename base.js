@@ -81,7 +81,6 @@ var SC = window.SC = window.Sugarcube = (function() {
     return chart
   }
 
-
   SC.scales.pick = function(aesthetic, options) {
     if (this.scales[aesthetic]) return
 
@@ -92,9 +91,10 @@ var SC = window.SC = window.Sugarcube = (function() {
 
     var scaleType = 'identity'
     ,   columnType = SC.util.type(this.data.columns[aesthetic])
-    
+
     if (columnType === 'number') scaleType = 'continuous'
     else if (columnType === 'string') scaleType = 'categorical'
+    else if (columnType === 'time') scaleType = 'time'
 
     SC.scales[scaleType].call(this, aesthetic, options)
   }

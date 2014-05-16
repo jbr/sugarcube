@@ -17,6 +17,7 @@
     <!-- ACTUAL DEPENDENCIES -->
     <script src="bower_components/d3/d3.js" charset="utf8"></script>
     <script src="bower_components/underscore/underscore.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
     <script src="sugarcube.js"></script>
 
     <!-- DEPENDENCIES FOR THIS EXAMPLE ONLY -->
@@ -24,14 +25,14 @@
     <script src="bower_components/prism/prism.js"></script>
 
     <script>
-      'histogram points categorical alphabet line path'.split(' ').forEach(function(exampleName) {
-      $('<div><h3>' + exampleName + '</h3><svg width="375" height="300"></svg><pre><code class="language-javascript"></code></pre></div>')
-        .appendTo('#examples').attr('id', exampleName)
+      'histogram points categorical alphabet line path time'
+      .split(' ').forEach(function(exampleName) {
+      $('<div><h3></h3><svg width="375" height="300"></svg><pre><code class="language-javascript"></code></pre></div>')
+        .appendTo('#examples').attr('id', exampleName).find('h3').text(exampleName)
 
-      $.get('examples/'+exampleName+'.js')
-        .fail(function(z,o,err) {throw err})
+      $.get('examples/' + exampleName + '.js')
+        .fail(function(___, ___, err) { throw err })
         .done(function(example) {
-          console.log(arguments)
           Prism.highlightElement($('#'+exampleName+' code').text(example).get(0))
         })
       })

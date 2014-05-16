@@ -1,4 +1,3 @@
-
 SC.scales.continuous = function(aesthetic, options) {
   var extents = d3.extent(this.data.columns[aesthetic])
 
