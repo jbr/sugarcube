@@ -359,8 +359,8 @@ SC.geoms.ribbon = function() {
   })
 }
 SC.geoms.tile = function() {
-  SC.scales.categorical.call(this, 'x', { pad: 0, range: [0, this.width] })
-  SC.scales.categorical.call(this, 'y', { pad: 0, range: [this.height, 0]})
+  SC.scales.categorical.call(this, 'x', { pad: 0, range: [0, this.width], rangePad: 0 })
+  SC.scales.categorical.call(this, 'y', { pad: 0, range: [this.height, 0], rangePad: 0})
   SC.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
 
   SC.axis.x.call(this)
@@ -389,7 +389,7 @@ SC.scales.categorical = function(aesthetic, options) {
 
   if ((aesthetic === 'x' || aesthetic === 'y')) {
     _(options).defaults({ rangePad: 0.1 })
-    this.scales[aesthetic].rangeBands(options.range, options.rangePad)
+    this.scales[aesthetic].rangeRoundBands(options.range, options.rangePad, options.rangePad)
   } else {
     this.scales[aesthetic].range(options.range)
   }

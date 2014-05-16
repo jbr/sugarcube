@@ -1,6 +1,6 @@
 SC.geoms.tile = function() {
-  SC.scales.categorical.call(this, 'x', { pad: 0, range: [0, this.width] })
-  SC.scales.categorical.call(this, 'y', { pad: 0, range: [this.height, 0]})
+  SC.scales.categorical.call(this, 'x', { pad: 0, range: [0, this.width], rangePad: 0 })
+  SC.scales.categorical.call(this, 'y', { pad: 0, range: [this.height, 0], rangePad: 0})
   SC.scales.pick.call(this, 'fill', { defaultValue: 'black', range: ['red', 'blue'] })
 
   SC.axis.x.call(this)
