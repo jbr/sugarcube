@@ -23,3 +23,7 @@ svg .axis line {
     stroke: #000;
     stroke-width: 1px;
 }
+
+svg .label {
+    font-size: 1.5em;
+}

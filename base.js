@@ -103,24 +103,44 @@ var SC = window.SC = window.Sugarcube = (function() {
   SC.axis.x = function() {
     if (!this.scales.x) throw new Error("cannot make a x axis without a x scale")
     this.axes.x = d3.svg.axis().orient('bottom').scale(this.scales.x)
+    var label = this.options.xlab || this.aes.x
 
     this.renders.push(function xAxis() {
       this.element.append('g')
         .attr('class', 'x axis')
         .attr('transform', 'translate(0,'+this.height+')')
         .call(this.axes.x)
+
+      this.element.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", this.width / 2.0)
+        .attr("y", this.height + this.margin.bottom - 20)
+        .text(label)
     })
   }
 
   SC.axis.y = function() {
     if (!this.scales.y) throw new Error("cannot make a y axis without a y scale")
     this.axes.y = d3.svg.axis().orient('left').scale(this.scales.y)
+    var label = this.options.ylab || this.aes.y
+
 
     this.renders.push(function yAxis() {
       this.element.append('g')
         .attr('class', 'y axis')
         .attr('transform', 'translate(0,0)')
         .call(this.axes.y)
+
+      this.element
+        .append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "middle")
+        .attr('x', - this.height / 2.0)
+        .attr("y", - this.margin.left)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text(label)
     })
   }
 

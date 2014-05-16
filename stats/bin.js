@@ -37,6 +37,8 @@ SC.stats.bin = function() {
   //     this.data.columns.x = this.data.columns.x.map(Number)
 
   this.data.columns.y = this.data.columns.counts
+  this.aes.y = 'count'
+  this.options.ylab = this.aes.x + ' count'
 
   this.data.rows = SC.util.columnsToRows(this.data.columns)
   SC.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })

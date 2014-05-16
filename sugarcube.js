@@ -103,24 +103,44 @@ var SC = window.SC = window.Sugarcube = (function() {
   SC.axis.x = function() {
     if (!this.scales.x) throw new Error("cannot make a x axis without a x scale")
     this.axes.x = d3.svg.axis().orient('bottom').scale(this.scales.x)
+    var label = this.options.xlab || this.aes.x
 
     this.renders.push(function xAxis() {
       this.element.append('g')
         .attr('class', 'x axis')
         .attr('transform', 'translate(0,'+this.height+')')
         .call(this.axes.x)
+
+      this.element.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", this.width / 2.0)
+        .attr("y", this.height + this.margin.bottom - 20)
+        .text(label)
     })
   }
 
   SC.axis.y = function() {
     if (!this.scales.y) throw new Error("cannot make a y axis without a y scale")
     this.axes.y = d3.svg.axis().orient('left').scale(this.scales.y)
+    var label = this.options.ylab || this.aes.y
+
 
     this.renders.push(function yAxis() {
       this.element.append('g')
         .attr('class', 'y axis')
         .attr('transform', 'translate(0,0)')
         .call(this.axes.y)
+
+      this.element
+        .append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "middle")
+        .attr('x', - this.height / 2.0)
+        .attr("y", - this.margin.left)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text(label)
     })
   }
 
@@ -165,6 +185,8 @@ SC.stats.bin = function() {
   //     this.data.columns.x = this.data.columns.x.map(Number)
 
   this.data.columns.y = this.data.columns.counts
+  this.aes.y = 'count'
+  this.options.ylab = this.aes.x + ' count'
 
   this.data.rows = SC.util.columnsToRows(this.data.columns)
   SC.scales.categorical.call(this, 'x', { rangePad: 0, range: [0,this.width] })
@@ -432,7 +454,7 @@ SC.util.cast.time = function(d) {
 
 
 SC.util.isTime = function(data) {
-  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a']).isValid()
+  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a'], true).isValid()
 }
 
 SC.util.isDate = function(data) {
@@ -445,10 +467,8 @@ SC.util.type = function(data) {
     if (types.length > 1) throw new Error("elements in an array should be the same type, but were mixed: " + types.join(", "))
     return types[0]
   } else if (SC.util.isDate(data)) {
-    console.log(data, 'is date')
     return 'time'
   } else if (SC.util.isTime(data)) {
-    console.log(data, 'is time')
     return 'time'
   } else if (_(data).isString()) {
     return 'string'
