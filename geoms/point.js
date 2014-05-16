@@ -1,3 +1,5 @@
+SC.registerAesthetics('x', 'y', 'fill', 'size', 'alpha')
+
 SC.geoms.point = function() {
   var chart = this
 

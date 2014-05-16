@@ -45,6 +45,11 @@ var SC = window.SC = window.Sugarcube = (function() {
     return this
   }
 
+  SC.knownAesthetics = []
+  SC.registerAesthetics = function() {
+    SC.knownAesthetics = _(SC.knownAesthetics).union([].slice.call(arguments))
+  }
+
 
   SC.proto.q = function(options) {
     if (_(options).isArray() || SC.util.isSColumns(options))
@@ -52,7 +57,7 @@ var SC = window.SC = window.Sugarcube = (function() {
     
     SC.util.deepExtend(this.options, options)
 
-    _(this.aes).extend(_(this.options).pick('x', 'y', 'color', 'fill', 'size', 'alpha'),
+    _(this.aes).extend(_(this.options).pick(SC.knownAesthetics),
                        this.options.aes)
 
     _(this.data).extend({ raw: this.options.data })
