@@ -72,7 +72,6 @@ SC.util.deepExtend = function(root) {
 }
 
 SC.util.cast = function(aesthetic, type) {
-  console.log(this.data.columns, aesthetic)
   this.data.columns[aesthetic] = this.data.columns[aesthetic].map(SC.util.cast[type])
   this.data.rows = SC.util.columnsToRows(this.data.columns)
 }
