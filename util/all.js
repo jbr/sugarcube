@@ -86,7 +86,7 @@ SC.util.cast.time = function(d) {
 
 
 SC.util.isTime = function(data) {
-  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a']).isValid()
+  return _(data).isString() && moment(data, ['HH:mm', 'hh:mma', 'hh:mm a'], true).isValid()
 }
 
 SC.util.isDate = function(data) {
@@ -99,10 +99,8 @@ SC.util.type = function(data) {
     if (types.length > 1) throw new Error("elements in an array should be the same type, but were mixed: " + types.join(", "))
     return types[0]
   } else if (SC.util.isDate(data)) {
-    console.log(data, 'is date')
     return 'time'
   } else if (SC.util.isTime(data)) {
-    console.log(data, 'is time')
     return 'time'
   } else if (_(data).isString()) {
     return 'string'
