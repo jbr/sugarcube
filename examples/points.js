@@ -1,36 +1,9 @@
 SC('#points svg').q({
-  x: 'm',
-  y: 'n',
-  fill: 'l',
-  alpha: 0.25,
-  geom: 'jitter',
-  data: [
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'alpha', m: 20, n: 30},
-    {l: 'beta', m: 100, n: 80},
-    {l: 'beta', m: 100, n: 80},
-    {l: 'gamma', m: 100, n: 80},
-    {l: 'beta', m: 100, n: 80},
-    {l: 'beta', m: 100, n: 80},
-    {l: 'beta', m: 100, n: 80},
-    {l: 'gamma', m: 30, n: 80},
-    {l: 'delta', m: 35, n: 10},
-    {l: 'gamma', m: 30, n: 80},
-    {l: 'delta', m: 35, n: 10},
-    {l: 'gamma', m: 30, n: 80},
-    {l: 'gamma', m: 35, n: 10},
-    {l: 'gamma', m: 30, n: 80},
-    {l: 'delta', m: 35, n: 10},
-    {l: 'gamma', m: 30, n: 80},
-    {l: 'alpha', m: 35, n: 10},
-    {l: 'delta', m: 35, n: 10},
-    {l: 'delta', m: 35, n: 10},
-    {l: 'delta', m: 35, n: 10}
-  ]
+  x: 'height',
+  y: 'weight',
+  geom: 'point',
+  data: {
+    height: [ 1, 2, 3, 4, 5 ],
+    weight: [ 100, 23, 500, 100, 250 ]
+  }
 }).render()
