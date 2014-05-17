@@ -8,8 +8,6 @@ SC.util.isSColumns = function(d) {
 SC.util.processData = function() {
   var chart = this
   _(this.data).defaults({ columns: {}, rows: [] })
-
-
   
   if (_(this.data.raw).isArray() && SC.util.type(this.data.raw) === 'object') {
     this.data.rows = chart.data.raw.map(function(inRow) {
@@ -28,7 +26,8 @@ SC.util.processData = function() {
       } else if (_(this.data.raw).isArray()) {
         this.data.columns.x = this.data.raw
         this.aes.x = 'x'
-        _(this).defaults({ geom: 'bar', stat: 'bin' })
+        if (! this.geom)
+          _(this).defaults({ geom: 'bar', stat: 'bin' })
         this.data.rows = SC.util.columnsToRows(this.data.columns)
       } else if (_(this.data.raw).isObject()) {
         this.data.columns = _(this.aes).reduce(function(columns, value, key) {

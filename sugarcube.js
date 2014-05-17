@@ -253,6 +253,24 @@ SC.geoms.bar = function() {
   })
 }
 
+SC.geoms.density = function() {
+  SC.util.deepSet(this, 'limits.y.min', 0)
+  SC.scales.pick.call(this, 'x', { range: [0, this.width] })
+
+  var data = this.data.columns.x
+
+  this.data.columns.x = this.scales.x.ticks(500)
+  this.data.columns.y = this.data.columns.x.map(function(x) {
+    var scale = 10
+    ,   sample = data
+    ,   kernel = function(u) { return Math.abs(u /= scale) <= 1 ? .75 * (1 - u * u) / scale : 0 }
+    return d3.mean(sample, function(v) { return kernel(x - v) })
+  })
+
+  this.data.rows = SC.util.columnsToRows(this.data.columns)
+  this.options.ylab = "kernel density of " + this.aes.x
+  SC.geoms.line.call(this)
+}
 SC.geoms.histogram = function() {
   SC.stats.bin.call(this)
   SC.geoms.bar.call(this)
@@ -456,8 +474,6 @@ SC.util.isSColumns = function(d) {
 SC.util.processData = function() {
   var chart = this
   _(this.data).defaults({ columns: {}, rows: [] })
-
-
   
   if (_(this.data.raw).isArray() && SC.util.type(this.data.raw) === 'object') {
     this.data.rows = chart.data.raw.map(function(inRow) {
@@ -476,7 +492,8 @@ SC.util.processData = function() {
       } else if (_(this.data.raw).isArray()) {
         this.data.columns.x = this.data.raw
         this.aes.x = 'x'
-        _(this).defaults({ geom: 'bar', stat: 'bin' })
+        if (! this.geom)
+          _(this).defaults({ geom: 'bar', stat: 'bin' })
         this.data.rows = SC.util.columnsToRows(this.data.columns)
       } else if (_(this.data.raw).isObject()) {
         this.data.columns = _(this.aes).reduce(function(columns, value, key) {
